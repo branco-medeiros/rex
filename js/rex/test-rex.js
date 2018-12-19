@@ -1,5 +1,5 @@
-define(["utils/test", "peg/peg", "types/context", "utils/char-class"],
-function(test, peg, context, cc){
+define(["utils/test", "./rex", "types/context", "utils/char-class"],
+function(test, rex, context, cc){
 
   function testLit(){
 
@@ -8,9 +8,9 @@ function(test, peg, context, cc){
       var ctx = context.from("abc123")
       var lit = null
 
-      chk("var v = peg.lit('a')",
+      chk("var v = rex.lit('a')",
         function(){
-          lit = peg.lit("a")
+          lit = rex.lit("a")
           return lit
         }
       ).isValid()
@@ -42,10 +42,10 @@ function(test, peg, context, cc){
         var seq = null;
         var ctx = context.from("abc123")
 
-        chk("var s = peg.seq('a', 'b', 'c')",
+        chk("var s = rex.seq('a', 'b', 'c')",
 
           function(){
-            seq = peg.seq("a", "b", "c")
+            seq = rex.seq("a", "b", "c")
             return seq
           }
 
@@ -83,9 +83,9 @@ function(test, peg, context, cc){
       var ctx = context.from("ab1")
       var alt
 
-      chk("var alt = peg.alt('a', 'b', 'c')",
+      chk("var alt = rex.alt('a', 'b', 'c')",
         function(){
-          alt = peg.alt('a', 'b', 'c')
+          alt = rex.alt('a', 'b', 'c')
           return alt
         }
       ).mustSucceed()
@@ -119,8 +119,8 @@ function(test, peg, context, cc){
       var ctx = context.from("abc123");
 
       var opt = chk(
-        "var opt = peg.opt(cc.letter, cc.letter, cc.letter)",
-        peg.opt(cc.letter, cc.letter, cc.letter)
+        "var opt = rex.opt(cc.letter, cc.letter, cc.letter)",
+        rex.opt(cc.letter, cc.letter, cc.letter)
       ).isValid()
 
       msg("opt =", opt.display())
@@ -139,8 +139,8 @@ function(test, peg, context, cc){
       var ctx = context.from("abc123");
 
       var plus = chk(
-        "var plus = peg.plus(cc.letter)",
-        peg.plus(cc.letter)
+        "var plus = rex.plus(cc.letter)",
+        rex.plus(cc.letter)
       ).isValid()
 
       msg("plus =", plus.display())
@@ -158,8 +158,8 @@ function(test, peg, context, cc){
       var ctx = context.from("abc123");
 
       var star = chk(
-        "var star = peg.star(cc.letter)",
-        peg.star(cc.letter)
+        "var star = rex.star(cc.letter)",
+        rex.star(cc.letter)
       ).isValid()
 
       msg("star =", star.display())
@@ -187,13 +187,13 @@ function(test, peg, context, cc){
                   '>'
       )
       */
-      var _ = peg.star(cc.blank)
-      var tagName = peg.cap("tag-name", peg.plus(cc.letter))
-      var argName = peg.cap("arg-name", peg.plus(cc.letter))
-      var argValue = peg.cap("arg-value", peg.star(peg.isnt("\""), peg.ANY))
-      var arg = peg.cap("arg", argName, _, "=", _, '"', argValue, '"')
-      var autoClose = peg.cap("auto-close", "/")
-      var cap = peg.seq("<", tagName, _, peg.star(arg, _), peg.opt(autoClose), ">")
+      var _ = rex.star(cc.blank)
+      var tagName = rex.cap("tag-name", rex.plus(cc.letter))
+      var argName = rex.cap("arg-name", rex.plus(cc.letter))
+      var argValue = rex.cap("arg-value", rex.star(rex.isnt("\""), rex.ANY))
+      var arg = rex.cap("arg", argName, _, "=", _, '"', argValue, '"')
+      var autoClose = rex.cap("auto-close", "/")
+      var cap = rex.seq("<", tagName, _, rex.star(arg, _), rex.opt(autoClose), ">")
 
       function showCap(v){
         var value = ctx.slice(v.start, v.end)
@@ -223,7 +223,7 @@ function(test, peg, context, cc){
 
   function testGrammar(){
     test("PEG -- grammar", function(chk, msg){
-      var g = chk("var g = peg.grammar()", () => peg.grammar()).isValid()
+      var g = chk("var g = rex.grammar()", () => rex.grammar()).isValid()
       var token = chk(
         "var token = g('token').assign(g('ident'), g('number'), g('string'))",
         g('token').assign(g("ident"), g("number"), g("string"))

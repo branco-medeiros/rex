@@ -1,5 +1,5 @@
-define(["utils/test", "utils/char-class", "./peg", "types/context"],
-function(test, cc, peg, context){
+define(["utils/test", "utils/char-class", "./rex", "types/context"],
+function(test, cc, rex, context){
 
   function breakLevels(v) {
     return v.replace(/\(([0-2]):/g, "\r\n($1:")
@@ -8,7 +8,7 @@ function(test, cc, peg, context){
   function testRuleDisplay(){
     test("RULE  -- display", function(chk, msg){
 
-      var g = peg.grammar()
+      var g = rex.grammar()
       var test = g("test")
       var options = {noLineBreaks: true}
 
@@ -45,14 +45,14 @@ function(test, cc, peg, context){
 
   function testSimpleMatch(){
     test("RULE -- simple match", function(chk, msg){
-      var g = peg.grammar()
+      var g = rex.grammar()
       var options = {noLineBreaks: true}
       var ident = g("ident").assign([
           cc.letter,
-          peg.star(
-            peg.alt(
-              peg.plus(cc.alphanum),
-              [peg.alt(".", "_", "-"), peg.plus(cc.alphanum)]
+          rex.star(
+            rex.alt(
+              rex.plus(cc.alphanum),
+              [rex.alt(".", "_", "-"), rex.plus(cc.alphanum)]
             )
           )
         ])
@@ -72,12 +72,12 @@ function(test, cc, peg, context){
 
   function testSubRuleMatch(){
     test("RULE -- sub rule match", function(chk, msg){
-      var g = peg.grammar()
+      var g = rex.grammar()
       var options = {noLineBreaks: true}
       var identFirst = g("ident-first").assign(cc.letter)
-      var identText = g("ident-text").assign(peg.plus(cc.alphanum))
-      var identSep = g("ident-sep").assign([peg.alt(".", "_", "-"), identText])
-      var ident = g("ident").assign([identFirst, peg.star(peg.alt(identText, identSep))])
+      var identText = g("ident-text").assign(rex.plus(cc.alphanum))
+      var identSep = g("ident-sep").assign([rex.alt(".", "_", "-"), identText])
+      var ident = g("ident").assign([identFirst, rex.star(rex.alt(identText, identSep))])
 
       msg("For the following grammar:")
       msg(ident.fullDisplay(options))
@@ -110,7 +110,7 @@ function(test, cc, peg, context){
   function testDirectLeftRecursion(){
     test("RULE -- direct left recursion", function(chk, msg){
 
-      var g = peg.grammar()
+      var g = rex.grammar()
       var options = {noLineBreaks: true}
       var expr = g("expr").assign([g("expr"), "+", "n"], "n")
       expr.body[0].prec = 10
@@ -134,19 +134,19 @@ function(test, cc, peg, context){
   function testIndirectLeftRecursion(){
     test("RULE -- indirect left recursion", function(chk, msg){
 
-      var g = peg.grammar()
+      var g = rex.grammar()
       var options = {noLineBreaks: true}
       var expr = g("expr")
       var add = g("add")
       var num = g("num")
       add.assign([fn("add"), expr, "+", num])
-      num.assign([fn("num"), peg.plus(cc.digit)])
+      num.assign([fn("num"), rex.plus(cc.digit)])
       expr.assign(add, num)
       expr.body[0].prec = 10
 
 
       function fn(v){
-        return peg.fn(
+        return rex.fn(
           function(){
             msg(v)
           }
@@ -185,7 +185,7 @@ function(test, cc, peg, context){
   function testIndirectLeftRecursionSubRules(){
     test("RULE -- indirect left recursion -- with sub rules", function(chk, msg){
 
-      var g = peg.grammar()
+      var g = rex.grammar()
       var options = {noLineBreaks: true}
       var expr = g("expr").assign(g("add"), g("sub"), g("expr2"))
       var expr2 = g("expr2").assign(g("mul"), g("div"), g("expr3"))
@@ -195,10 +195,10 @@ function(test, cc, peg, context){
       expr2.body[0].prec = 20
       expr2.body[1].prec = 20
 
-      _ = g("_").assign(peg.star(" "))
+      _ = g("_").assign(rex.star(" "))
 
       function fn(v){
-        return peg.fn(
+        return rex.fn(
           function(){
             msg(v)
           }
@@ -208,7 +208,7 @@ function(test, cc, peg, context){
       g("sub").assign([fn("sub"), expr, "-", _, expr2])
       g("mul").assign([fn("mul"), expr2, "*", _, expr3])
       g("div").assign([fn("div"), expr2, "/", _, expr3])
-      g("num").assign([fn("num"), peg.plus(cc.digit), _])
+      g("num").assign([fn("num"), rex.plus(cc.digit), _])
       g("grp").assign([fn("grp"), "(", _, g("expr"), ")", _])
 
       msg("For the following grammar:")
@@ -230,7 +230,7 @@ function(test, cc, peg, context){
 
   function testMutualLeftRecursion(){
     test("RULE -- mutually left recursive rule", function(chk, msg){
-      var g = peg.grammar();
+      var g = rex.grammar();
       var sel = g("sel")
       var pref = g("pref")
       var id = g("id")
@@ -241,8 +241,8 @@ function(test, cc, peg, context){
       pref.assign([pref, "(", num, ")"], sel)
       pref.body[0].prec = 10
 
-      id.assign(peg.plus(cc.letter))
-      num.assign(peg.plus(cc.digit))
+      id.assign(rex.plus(cc.letter))
+      num.assign(rex.plus(cc.digit))
 
       var ctx = context.from("a(1)(2).b(3).c")
       window.result = ctx.result
